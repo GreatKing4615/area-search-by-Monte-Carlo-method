@@ -4,6 +4,7 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -125,7 +126,10 @@ namespace Monte_Carlo
                 
                 for (int i = 0; i < random_count; i++)
                 {
+                    /*
                     temp_point[0]= GetRandomNumber(coords[2], coords[0]);
+                    temp_point[1] = GetRandomNumber(coords[3], coords[1]);*/
+                    temp_point[0] = GetRandomNumber(coords[2], coords[0]);
                     temp_point[1] = GetRandomNumber(coords[3], coords[1]);
                     textBox2.Text = Convert.ToString(temp_point[0]) + "-" + temp_point[1].ToString();
                     chart1.Series[2].Points.AddXY(temp_point[0], temp_point[1]);
@@ -133,10 +137,21 @@ namespace Monte_Carlo
             }
         }
 
-        static double GetRandomNumber(double minimum, double maximum)
+        static double  GetRandomNumber(double minimum, double maximum)
         {
+            RNGCryptoServiceProvider rNGCrypto = new RNGCryptoServiceProvider();
             Random random = new Random();
-            return random.NextDouble() * (maximum - minimum) + minimum;
+            byte[] byte_answer = new byte[1];
+            rNGCrypto.GetBytes(byte_answer);
+            double random_multiplyer = byte_answer[0] / 255d;
+            double difference = maximum - minimum;
+            double result=(double)(minimum + (random_multiplyer * difference));
+            
+            return result;
+
+
+
+           // return random.NextDouble() * (maximum - minimum) + minimum;
         }
 
         private int [] print_square(List<List<int>> data_about_figure)
