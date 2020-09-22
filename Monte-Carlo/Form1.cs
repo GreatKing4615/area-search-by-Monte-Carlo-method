@@ -27,10 +27,6 @@ namespace Monte_Carlo
         {
 
 
-         /*   chart1.ChartAreas[0].AxisX.Minimum = -20; // настройка минимума и максимума оси X
-            chart1.ChartAreas[0].AxisX.Maximum = 20;
-            chart1.ChartAreas[0].AxisY.Minimum = -20;
-            chart1.ChartAreas[0].AxisY.Maximum = 20;*/
             chart1.Series[0].Points.Clear();
             chart1.Series[0].MarkerStyle = MarkerStyle.Circle;
             chart1.Series[0].ChartType = SeriesChartType.Line; // Тип графика - линия
@@ -110,31 +106,97 @@ namespace Monte_Carlo
             //coords[1]=высший
             //coords[2]=ближний
             //coords[3]=нижний
+
+            select_scale(coords);
             
-                      
             if (random_textbox.Text == "")
             {
                 MessageBox.Show("Введите количество точек");
             }
             else {
-                int random_count = Convert.ToInt32(random_textbox.Text);
-                // List<List<int>> random_point = new List<List<int>>();
-                chart1.Series[2].BorderWidth = 10;
-                chart1.Series[2].ChartType = SeriesChartType.Point;
-                chart1.Series[2].Color = Color.DarkBlue;
-                double[] temp_point = new double[2];
+
+                print_random_point(coords);
+                find_square(coords);
                 
-                for (int i = 0; i < random_count; i++)
+
+
+            }
+        }
+
+      
+        private bool hit_check(double [] xy_point)
+        {
+            List<List<int>> all_coords = input_data();
+            int[][] xy_coords = new int[all_coords.Count][];
+            int[] xy_last_coords = new int[2];
+            int i = 0;
+            foreach(List<int> coord in all_coords)
+            {xy_coords[i] = coord.ToArray();
+                i++;
+                // (((yp         <= y           and     y     < yp_prev       ) or (yp_prev         <=  y           and y          <    yp))      and (x        > (xp_prev          - xp)         * (y          -         yp)/(yp_prev          - yp)               + xp))
+               // if (((xy_coords[1]<=xy_point[1] && xy_point[1]<xy_last_coords[1])||(xy_last_coords[1]<= xy_point[1] && xy_point[1] < xy_coords[1]))&&(xy_point[0]>(xy_last_coords[0]-xy_coords[0])*(xy_point[1]-xy_coords[1])/(xy_last_coords[1]-xy_coords[1])+xy_coords[0]))
+            }
+
+            return false;
+
+        }
+
+        private void find_square(int[] coords)
+        {
+            double square = (coords[0] - coords[2])* (coords[1] - coords[3]);
+            textBox2.Text+= "Основная фигура=" + square.ToString();
+
+        }
+
+        private void print_random_point(int[] coords)
+        {
+            int random_count = Convert.ToInt32(random_textbox.Text);
+            chart1.Series[2].BorderWidth = 10;
+            chart1.Series[2].ChartType = SeriesChartType.Point;            
+            double[] temp_point = new double[2];
+
+            chart1.Series[2].Color = Color.Red;
+
+            chart1.Series[3].BorderWidth = 10;
+            chart1.Series[3].ChartType = SeriesChartType.Point;
+            chart1.Series[3].Color = Color.DarkBlue;
+            for (int i = 0; i < random_count; i++)
+            {
+                temp_point[0] = GetRandomNumber(coords[2], coords[0]);
+                temp_point[1] = GetRandomNumber(coords[3], coords[1]);
+                if (hit_check(temp_point))
                 {
-                    /*
-                    temp_point[0]= GetRandomNumber(coords[2], coords[0]);
-                    temp_point[1] = GetRandomNumber(coords[3], coords[1]);*/
-                    temp_point[0] = GetRandomNumber(coords[2], coords[0]);
-                    temp_point[1] = GetRandomNumber(coords[3], coords[1]);
-                    textBox2.Text = Convert.ToString(temp_point[0]) + "-" + temp_point[1].ToString();
+                    
+                    chart1.Series[3].Points.AddXY(temp_point[0], temp_point[1]);
+                }
+                else
+                {
+                    
                     chart1.Series[2].Points.AddXY(temp_point[0], temp_point[1]);
                 }
+                //textBox2.Text = Convert.ToString(temp_point[0]) + "-" + temp_point[1].ToString();
+                
+                
             }
+
+        }
+
+        private void select_scale(int[] coords)
+        {
+
+            int scale;
+            if (coords[0] - coords[2] >= coords[1] - coords[3])
+            {
+                scale = (coords[0] - coords[2]) / 2;
+            }
+            else
+            {
+                scale = (coords[1] - coords[3]) / 2;
+            }
+            chart1.ChartAreas[0].AxisX.Minimum = coords[2]; // настройка минимума и максимума оси X
+            chart1.ChartAreas[0].AxisX.Maximum = coords[0];
+            chart1.ChartAreas[0].AxisY.Minimum = coords[3];
+            chart1.ChartAreas[0].AxisY.Maximum = coords[1];            
         }
 
         static double  GetRandomNumber(double minimum, double maximum)
@@ -145,13 +207,8 @@ namespace Monte_Carlo
             rNGCrypto.GetBytes(byte_answer);
             double random_multiplyer = byte_answer[0] / 255d;
             double difference = maximum - minimum;
-            double result=(double)(minimum + (random_multiplyer * difference));
-            
+            double result=(double)(minimum + (random_multiplyer * difference));            
             return result;
-
-
-
-           // return random.NextDouble() * (maximum - minimum) + minimum;
         }
 
         private int [] print_square(List<List<int>> data_about_figure)
@@ -173,19 +230,39 @@ namespace Monte_Carlo
 
             chart1.Series[1].BorderWidth = 5;
             chart1.Series[1].ChartType = SeriesChartType.Line; // Тип графика - линия
-            chart1.Series[1].Color=Color.Red; // Тип графика - линия
-            chart1.Series[1].Points.AddXY(x_coord[0],y_coord[0]);
-            chart1.Series[1].Points.AddXY(x_coord[x_coord.Count-1],y_coord[0]);
-            chart1.Series[1].Points.AddXY(x_coord[x_coord.Count-1],y_coord[y_coord.Count-1]);
-            chart1.Series[1].Points.AddXY(x_coord[0],y_coord[y_coord.Count-1]);
-            chart1.Series[1].Points.AddXY(x_coord[0],y_coord[0]);
-
+            chart1.Series[1].Color=Color.Red;            
+            
             //передаю координаты максимальных отклонений фигуры
             int[] answer = new int[4];
-            answer[0] = x_coord[x_coord.Count - 1];
-            answer[1] = y_coord[y_coord.Count - 1];
-            answer[2] = y_coord[0];
-            answer[3] = y_coord[0];
+            if (comboBox1.SelectedIndex == 0)
+            {
+                chart1.Series[1].Points.AddXY(x_coord[0], y_coord[0]);
+                chart1.Series[1].Points.AddXY(x_coord[x_coord.Count - 1], y_coord[0]);
+                chart1.Series[1].Points.AddXY(x_coord[x_coord.Count - 1], y_coord[y_coord.Count - 1]);
+                chart1.Series[1].Points.AddXY(x_coord[0], y_coord[y_coord.Count - 1]);
+                chart1.Series[1].Points.AddXY(x_coord[0], y_coord[0]);
+
+                //передаю координаты максимальных отклонений фигуры
+                answer[0] = x_coord[x_coord.Count - 1];
+                answer[1] = y_coord[y_coord.Count - 1];
+                answer[2] = y_coord[0];
+                answer[3] = y_coord[0];
+            }
+            else if(comboBox1.SelectedIndex == 1)
+            {
+                chart1.Series[1].Points.AddXY(-Convert.ToInt32(textBox1.Text), Convert.ToInt32(textBox1.Text));
+                chart1.Series[1].Points.AddXY(-Convert.ToInt32(textBox1.Text), -Convert.ToInt32(textBox1.Text));
+                chart1.Series[1].Points.AddXY(Convert.ToInt32(textBox1.Text), -Convert.ToInt32(textBox1.Text));
+                chart1.Series[1].Points.AddXY(Convert.ToInt32(textBox1.Text), Convert.ToInt32(textBox1.Text));
+                chart1.Series[1].Points.AddXY(-Convert.ToInt32(textBox1.Text), Convert.ToInt32(textBox1.Text));
+
+                //передаю координаты максимальных отклонений фигуры
+                answer[0] = Convert.ToInt32(textBox1.Text);
+                answer[1] = Convert.ToInt32(textBox1.Text);
+                answer[2] = -Convert.ToInt32(textBox1.Text);
+                answer[3] = -Convert.ToInt32(textBox1.Text);
+            }
+
             return answer;
 
         }
@@ -208,8 +285,13 @@ namespace Monte_Carlo
 
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            label2.Visible = false;
-            textBox1.Visible = false;
+           // label2.Visible = false;
+            //textBox1.Visible = false;
+            chart1.Series[0].Points.Clear();
+            chart1.Series[1].Points.Clear();
+            chart1.Series[2].Points.Clear();
+            chart1.Series[3].Points.Clear();
+            dataGridView1.Rows.Clear();
 
             switch (comboBox1.SelectedIndex)
             {
